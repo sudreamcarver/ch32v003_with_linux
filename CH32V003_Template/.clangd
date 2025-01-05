@@ -1,0 +1,8 @@
+CompileFlags:
+  #Add:
+  #- "-Wno-unused-parameter"
+  Remove:
+    - "-march=rv32imac"
+    - "-msave-restore"
+    - "-G"
+    - "-mabi=ilp32"
