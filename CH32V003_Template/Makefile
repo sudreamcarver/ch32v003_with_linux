@@ -33,9 +33,9 @@ ASM_SOURCES =  \
 startup_ch32v00x.s
 
 ##########################################################################################################################
-# OPENOCD PATH
+# OPENOCD PATH  !!!full path needed
 ##########################################################################################################################
-	OCD = rvopenocd
+	OCD = /home/carver/MRS_Toolchain_Linux_x64/OpenOCD/OpenOCD/bin/rvopenocd
 
 #######################################
 # binaries
@@ -152,8 +152,8 @@ clean:
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).hex
-	sudo chmod 666 /dev/ttyACM0
-	$(OCD) -f wch-riscv.cfg  -c init -c halt  -c "program $(BUILD_DIR)/$(TARGET).hex" -c "verify_image $(BUILD_DIR)/$(TARGET).hex" -c wlink_reset_resume -c exit
+	sudo chmod -R 666 /dev/ttyACM0
+	sudo $(OCD) -f ./wch-riscv.cfg  -c init -c halt  -c "program $(BUILD_DIR)/$(TARGET).hex" -c "verify_image $(BUILD_DIR)/$(TARGET).hex" -c wlink_reset_resume -c exit
 
 #######################################
 # dependencies
