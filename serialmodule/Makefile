@@ -54,7 +54,7 @@ BIN = $(CP) -O binary -S
 # CFLAGS
 #######################################
 # cpu
-CPU = -march=rv32imac
+CPU = -march=rv32ec
 
 # fpu
 # NONE for Cortex-M0/M0+/M3
@@ -62,7 +62,7 @@ CPU = -march=rv32imac
 # float-abi
 
 # mcu
-MCU = $(CPU) -mabi=ilp32 -msmall-data-limit=0 -msave-restore -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized
+MCU = $(CPU) -mabi=ilp32e -msmall-data-limit=0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized
 
 #riscv-none-embed-gcc   -c -o "$@" "$<"
 # macros for gcc

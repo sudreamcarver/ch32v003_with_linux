@@ -1,29 +1,41 @@
-#include <debug.h>
+#include "ch32v00x_conf.h"
 
-void GPIO_Toggle(void) {
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
+/*
+ * PD6 最小闪烁测试
+ *
+ * 这个程序不使用 Delay_Ms、不初始化 USART、不使用 printf。
+ * 目的只是验证 main() 是否运行，以及 PD6 是否能被 GPIO 控制。
+ */
 
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
+static void PD6_LED_Init(void)
+{
+    GPIO_InitTypeDef gpio = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+
+    gpio.GPIO_Pin = GPIO_Pin_6;
+    gpio.GPIO_Mode = GPIO_Mode_Out_PP;
+    gpio.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &gpio);
 }
 
-int main(void) {
-  u8 i = 0;
+static void Raw_Delay(void)
+{
+    volatile uint32_t i;
 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-  SystemCoreClockUpdate();
-  Delay_Init();
-  printf("SystemClk:%d\r\n", SystemCoreClock);
-  printf("chipid:%08x\r\n", DBGMCU_GetDEVID());
-  printf("GPIO Toggle TEST\r\n");
+    for (i = 0; i < 600000u; i++) {
+        __asm volatile("nop");
+    }
+}
 
-  GPIO_Toggle();
-  while (1) {
-    Delay_Ms(250);
-    GPIO_WriteBit(GPIOD, GPIO_Pin_0,
-                  (i == 0) ? (i == Bit_SET) : (i = Bit_RESET));
-  }
+int main(void)
+{
+    PD6_LED_Init();
+
+    while (1) {
+        GPIO_SetBits(GPIOD, GPIO_Pin_6);
+        Raw_Delay();
+        GPIO_ResetBits(GPIOD, GPIO_Pin_6);
+        Raw_Delay();
+    }
 }

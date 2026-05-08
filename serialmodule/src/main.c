@@ -1,14 +1,14 @@
 #include "uart_upload.h"
 #include <debug.h>
 
-/* Configure PD0 as push-pull output for the onboard LED example. */
+/* Configure PD6 as push-pull output for the onboard LED indicator. */
 void
-GPIO_Toggle (void)
+LED_PD6_Init (void)
 {
     GPIO_InitTypeDef GPIO_InitStructure = { 0 };
 
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOD, ENABLE);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init (GPIOD, &GPIO_InitStructure);
@@ -17,7 +17,7 @@ GPIO_Toggle (void)
 int
 main (void)
 {
-    u8 led = 0;
+    u8 led_state = 0;
     uint32_t sample_count = 0;
 
     /* Basic system setup used by the WCH examples. */
@@ -38,25 +38,18 @@ main (void)
     UART_Upload_SendKV_U32 ("SystemClk", SystemCoreClock);
     UART_Upload_SendKV_U32 ("ChipID", DBGMCU_GetDEVID ());
 
-    GPIO_Toggle ();
+    LED_PD6_Init ();
     while (1)
         {
-            uint16_t payload[2];
-
             Delay_Ms (500);
 
-            /* Toggle PD0 every 500 ms and upload the current state. */
-            GPIO_WriteBit (GPIOD, GPIO_Pin_0,
-                           (led == 0) ? (led = Bit_SET) : (led = Bit_RESET));
+            /* Toggle PD6 after each upload so the board shows the loop is running. */
+            GPIO_WriteBit (GPIOD, GPIO_Pin_6,
+                           (led_state == 0) ? (led_state = Bit_SET)
+                                            : (led_state = Bit_RESET));
 
             sample_count++;
             UART_Upload_SendKV_U32 ("count", sample_count);
-            UART_Upload_SendKV_U32 ("led", led);
-
-            /* Also upload the same data as a compact binary frame, type 0x01.
-             */
-            payload[0] = (uint16_t)sample_count;
-            payload[1] = (uint16_t)led;
-            UART_Upload_SendFrame (0x01, payload, sizeof (payload));
+            UART_Upload_SendKV_U32 ("pd6", led_state);
         }
 }
