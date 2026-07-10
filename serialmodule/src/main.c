@@ -1,14 +1,17 @@
 #include "uart_upload.h"
 #include <debug.h>
 
-/* Configure PD6 as push-pull output for the onboard LED indicator. */
+/* PD1 is SWIO after reset, so disable SDI before using it as GPIO. */
 void
-LED_PD6_Init (void)
+LED_PD1_Init (void)
 {
     GPIO_InitTypeDef GPIO_InitStructure = { 0 };
 
-    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOD, ENABLE);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,
+                            ENABLE);
+    GPIO_PinRemapConfig (GPIO_Remap_SDI_Disable, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init (GPIOD, &GPIO_InitStructure);
@@ -38,18 +41,19 @@ main (void)
     UART_Upload_SendKV_U32 ("SystemClk", SystemCoreClock);
     UART_Upload_SendKV_U32 ("ChipID", DBGMCU_GetDEVID ());
 
-    LED_PD6_Init ();
+    LED_PD1_Init ();
     while (1)
         {
             Delay_Ms (500);
 
-            /* Toggle PD6 after each upload so the board shows the loop is running. */
-            GPIO_WriteBit (GPIOD, GPIO_Pin_6,
+            /* Toggle PD1 after each upload so the board shows the loop is
+             * running. */
+            GPIO_WriteBit (GPIOD, GPIO_Pin_1,
                            (led_state == 0) ? (led_state = Bit_SET)
                                             : (led_state = Bit_RESET));
 
             sample_count++;
             UART_Upload_SendKV_U32 ("count", sample_count);
-            UART_Upload_SendKV_U32 ("pd6", led_state);
+            UART_Upload_SendKV_U32 ("pd1", led_state);
         }
 }
